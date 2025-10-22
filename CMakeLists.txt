@@ -94,6 +94,8 @@ add_subdirectory(examples/hello_dual_cdc)
 # add_subdirectory(examples/compilation_errors)
 add_subdirectory(examples/hello_hat)
 add_subdirectory(examples/hat_example)
+add_subdirectory(examples/hat_imu_ex)
+add_subdirectory(examples/hat_imu_cdc_ex)
 #
 # You can edit it if you want to add new examples
 # ==============================================================================================

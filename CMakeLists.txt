@@ -96,6 +96,7 @@ add_subdirectory(examples/hello_hat)
 add_subdirectory(examples/hat_example)
 add_subdirectory(examples/hat_imu_ex)
 add_subdirectory(examples/hat_imu_cdc_ex)
+add_subdirectory(examples/hello_serial_client)
 #
 # You can edit it if you want to add new examples
 # ==============================================================================================

@@ -11,7 +11,7 @@
 #define DEFAULT_STACK_SIZE 2048
 
 static const char *hellotext [] = {
-    "... ",   // H
+    ".... ",   // H
     ". ",     // E
     ".-.. ",  // L
     ".-.. ",  // L
@@ -20,13 +20,37 @@ static const char *hellotext [] = {
     "--- ",   // O
     ".-. ",   // R
     ".-.. ",  // L
-    "-..  ",  // D  (two spaces end of word)
-    "\n"
+    "-..  ",  // D  (two spaces end of text)
+    "\n", 
+    NULL
 };
 
-static uint8_t button_pressed;
+static const char *hellotext_debug [] = {
+    ".... ",   // H
+    ". ",     // E
+    ".-.. ",  // L
+    ".-.. ",  // L
+    "---  ",  // O  (two spaces: end of word)
+    "__Some debug goes here__",
+    ".-- ",   // W
+    "--- ",   // O
+    ".-. ",   // R
+    ".-.. ",  // L
+    "-..  ",  // D  (two spaces end of text)
+    "\n", 
+    NULL
+};
+
+
+//Alternative using just a string
+//static const char hellotext[] = ".... . .-.. .-.. ---  .-- --- .-. .-.. -..  \n"
+
+static volatile uint8_t button_pressed, debug_pressed;
 static void btn_fxn(uint gpio, uint32_t eventMask) {
-    button_pressed = true;
+    if (gpio  == BUTTON1)
+        button_pressed = true;
+    else if (gpio == BUTTON2)
+        debug_pressed = true;
     toggle_led();
 }
 
@@ -42,6 +66,12 @@ static void print_task(void *arg){
             }
             button_pressed = false;
         }
+        if (debug_pressed){
+            for (int i = 0; hellotext_debug[i] != NULL; i++) {
+                printf("%s", hellotext_debug[i]);
+            }
+            debug_pressed = false;
+        }
         vTaskDelay(pdMS_TO_TICKS(200));
     }
 }
@@ -52,8 +82,10 @@ int main() {
     init_hat_sdk();
     sleep_ms(300); //Wait some time so initialization of USB and hat is done.
     init_button1();
+    init_button2();
     init_led();
     gpio_set_irq_enabled_with_callback(BUTTON1, GPIO_IRQ_EDGE_RISE, true, btn_fxn);
+    gpio_set_irq_enabled(BUTTON2, GPIO_IRQ_EDGE_RISE, true);
 
     TaskHandle_t hPrintTask;
 

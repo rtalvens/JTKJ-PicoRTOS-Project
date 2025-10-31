@@ -9,6 +9,9 @@
 #include <task.h>
 
 #include "tkjhat/sdk.h"
+// #include "mpu9250.h"
+// #include "icm42670p.h"
+
 
 // Exercise 4. Include the libraries necessaries to use the usb-serial-debug, and tinyusb
 // Tehtävä 4 . Lisää usb-serial-debugin ja tinyusbin käyttämiseen tarvittavat kirjastot.
@@ -39,53 +42,28 @@ static void btn_fxn(uint gpio, uint32_t eventMask) {
 
 static void sensor_task(void *arg){
     (void)arg;
-    // Tehtävä 2: Alusta valoisuusanturi. Etsi SDK-dokumentaatiosta sopiva funktio.
-    // Exercise 2: Init the light sensor. Find in the SDK documentation the adequate function.
-    init_veml6030();  //lisätty
-   
-    for(;;){
-        
-        // Tehtävä 2: Muokkaa tästä eteenpäin sovelluskoodilla. Kommentoi seuraava rivi.
-        //             
-        // Exercise 2: Modify with application code here. Comment following line.
-        //             Read sensor data and print it out as string; 
 
+    init_mpu9250();
+
+    printf("timestamp, ax, ay, az, gx, gy, gz\n");
+
+    uint32_t timestamp = 0;
+
+    for (;;) {
         if (programState == WAITING) {
-            // Lue sensorin arvo
-            uint32_t lux = veml6030_read_light();
-            
-            // Tallenna arvo globaaliin muuttujaan
-            ambientLight = lux;
+            float ax, ay, az;
+            float gx, gy, gz;
 
-            // Vaihda tilaksi DATA_READY
+            read_mpu9250_accel_gyro(&ax, &ay, &az, &gx, &gy, &gz);
+
+            printf("%lu, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f\n",
+                   timestamp, ax, ay, az, gx, gy, gz);
+
             programState = DATA_READY;
+            timestamp += 100;
         }
-
-        //tight_loop_contents(); 
-
-
-   
-
-
-        // Tehtävä 3:  Muokkaa aiemmin Tehtävässä 2 tehtyä koodia ylempänä.
-        //             Jos olet oikeassa tilassa, tallenna anturin arvo tulostamisen sijaan
-        //             globaaliin muuttujaan.
-        //             Sen jälkeen muuta tilaa.
-        // Exercise 3: Modify previous code done for Exercise 2, in previous lines. 
-        //             If you are in adequate state, instead of printing save the sensor value 
-        //             into the global variable.
-        //             After that, modify state
-
-
-
-
-
-        
-        // Exercise 2. Just for sanity check. Please, comment this out
-        // Tehtävä 2: Just for sanity check. Please, comment this out
-        // printf("sensorTask\n");
-
-        // Do not remove this
+      
+    
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
@@ -144,14 +122,14 @@ static void print_task(void *arg){
 // Exercise 4: Uncomment the following line to activate the TinyUSB library.  
 // Tehtävä 4:  Poista seuraavan rivin kommentointi aktivoidaksesi TinyUSB-kirjaston. 
 
-/*
-static void usbTask(void *arg) {
-    (void)arg;
-    while (1) {
-        tud_task();              // With FreeRTOS wait for events
+
+//static void usbTask(void *arg) {
+//    (void)arg;
+//    while (1) {
+//        tud_task();              // With FreeRTOS wait for events
                                  // Do not add vTaskDelay. 
-    }
-}*/
+//    }
+//}
 
 int main() {
 
@@ -196,12 +174,12 @@ int main() {
     // Tehtävä 4: Poista tämän xTaskCreate-rivin kommentointi luodaksesi tehtävän,
     // joka mahdollistaa kaksikanavaisen USB-viestinnän.
 
-    /*
-    xTaskCreate(usbTask, "usb", 2048, NULL, 3, &hUSB);
-    #if (configNUMBER_OF_CORES > 1)
-        vTaskCoreAffinitySet(hUSB, 1u << 0);
-    #endif
-    */
+    
+    //xTaskCreate(usbTask, "usb", 2048, NULL, 3, &hUSB);
+    //#if (configNUMBER_OF_CORES > 1)
+    //    vTaskCoreAffinitySet(hUSB, 1u << 0);
+    //#endif
+    
 
 
     // Create the tasks with xTaskCreate
@@ -227,6 +205,7 @@ int main() {
         printf("Print Task creation failed\n");
         return 0;
     }
+    
 
     // Start the scheduler (never returns)
     vTaskStartScheduler();

@@ -55,7 +55,7 @@ static void sensor_task(void *arg){
         printf("ICM42670 initialization failed\n");
     }
 
-    while(1)
+    /*while(1)
     {
         if (ICM42670_read_sensor_data(&ax, &ay, &az, &gx, &gy, &gz, &t) == 0) {
             printf("%lu, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f\n", xTaskGetTickCount()*100, ax, ay, az, gx, gy, gz);
@@ -65,39 +65,38 @@ static void sensor_task(void *arg){
         }
         vTaskDelay(pdMS_TO_TICKS(500));
     }
-}
-    uint32_t timestamp = 0;
+}*/
+    uint32_t timestamp = 0; 
 
-
-
-
-    /*for (;;) {
+    while(1) {
         if (programState == WAITING) {
             
             if(ICM42670_read_sensor_data(&ax, &ay, &az, &gx, &gy, &gz, &t) == 0){
-                printf("%lu, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f\n", timestamp, ax, ay, az, gx, gy, gz);
+                programState = DATA_READY;
+                //printf("%lu, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f\n", timestamp, ax, ay, az, gx, gy, gz);
             } else {
                 printf("Failed to read sensor data\n");
             }
 
-            programState = DATA_READY;
+            //programState = DATA_READY;
             timestamp += 100;
         }
       
     
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
-}*/
+}
 
 static void print_task(void *arg){
+    uint32_t timestamp = 0; 
     (void)arg;
-    
     while(1){
          if (programState == DATA_READY) {
-            printf("Accel: %.2f, %.2f, %.2f | Gyro: %.2f, %.2f, %.2f\n",
-                   ax, ay, az, gx, gy, gz);
+            printf("{%lu, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f},\n",
+                   timestamp, ax, ay, az, gx, gy, gz);
 
             programState = WAITING;
+            timestamp += 100;
         }
         vTaskDelay(pdMS_TO_TICKS(500));
     }
@@ -121,18 +120,12 @@ int main() {
 
 
     
-    //while (!stdio_usb_connected()){
-     //   sleep_ms(10);
-    //}
+    while (!stdio_usb_connected()){
+       sleep_ms(10);
+    }
     
     init_hat_sdk();
     sleep_ms(300); 
-
-    i2c_init(i2c_default, 400 * 1000);
-    gpio_set_function(PICO_DEFAULT_I2C_SDA_PIN, GPIO_FUNC_I2C);
-    gpio_set_function(PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C);
-    gpio_pull_up(PICO_DEFAULT_I2C_SDA_PIN);
-    gpio_pull_up(PICO_DEFAULT_I2C_SCL_PIN);
 
     printf("Starting sensor task... \n");
 

@@ -9,7 +9,7 @@
 #include <task.h>
 
 #include "tkjhat/sdk.h"
-//#include "usbSerialDebug/helper.h"
+#include <tusb.h>
 
 
 
@@ -29,7 +29,7 @@ float ax = 0, ay = 0, az = 0;
 float gx = 0, gy = 0, gz = 0;
 float t = 0;
 
-enum state { WAITING=1, DATA_READY};
+enum state { WAITING=1, DATA_READY, DOT, DASH, SPACE};
 enum state programState = WAITING;
 
 //uint32_t ambientLight;
@@ -55,25 +55,29 @@ static void sensor_task(void *arg){
         printf("ICM42670 initialization failed\n");
     }
 
-    /*while(1)
-    {
-        if (ICM42670_read_sensor_data(&ax, &ay, &az, &gx, &gy, &gz, &t) == 0) {
-            printf("%lu, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f\n", xTaskGetTickCount()*100, ax, ay, az, gx, gy, gz);
-            programState = DATA_READY;
-        } else {
-            printf("Failed to read sensor data\n");
-        }
-        vTaskDelay(pdMS_TO_TICKS(500));
-    }
-}*/
+    
     uint32_t timestamp = 0; 
-
+    
     while(1) {
-        if (programState == WAITING) {
+        ICM42670_read_sensor_data(&ax, &ay, &az, &gx, &gy, &gz, &t);
+        
+        if (ax <= -1.0) {
+            programState = DOT;
+        } else if (ay <= -1.0) {
+            programState = DASH;
+        } else if (az >=  1.0) {  
+            programState = SPACE;
+        }else {
+            programState = WAITING;
+
+        }
+        
+    }
+        
+        /* if (programState == WAITING) {
             
             if(ICM42670_read_sensor_data(&ax, &ay, &az, &gx, &gy, &gz, &t) == 0){
                 programState = DATA_READY;
-                //printf("%lu, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f\n", timestamp, ax, ay, az, gx, gy, gz);
             } else {
                 printf("Failed to read sensor data\n");
             }
@@ -83,9 +87,10 @@ static void sensor_task(void *arg){
         }
       
     
-        vTaskDelay(pdMS_TO_TICKS(1000));
-    }
+        vTaskDelay(pdMS_TO_TICKS(1000));*/
 }
+
+
 
 static void print_task(void *arg){
     uint32_t timestamp = 0; 
@@ -103,15 +108,14 @@ static void print_task(void *arg){
 }
 
 
-
-
-//static void usbTask(void *arg) {
-//    (void)arg;
-//    while (1) {
-//        tud_task();              // With FreeRTOS wait for events
+static void usbTask(void *arg){
+    (void)arg;
+    while(1){
+        tud_task();              // With FreeRTOS wait for events
                                  // Do not add vTaskDelay. 
-//    }
-//}
+    }
+}
+
 
 int main() {
 
@@ -129,11 +133,17 @@ int main() {
 
     printf("Starting sensor task... \n");
 
+    //Create sensor task
     TaskHandle_t hSensorTask = NULL;
     xTaskCreate(sensor_task, "Sensor Task", 2048, NULL, 2, &hSensorTask);
 
+    //Create print task
     TaskHandle_t hPrintTask = NULL;
     xTaskCreate(print_task, "SPrint Task", 2048, NULL, 2, &hPrintTask);
+
+    //Create USB task
+    TaskHandle_t hUSBTask = NULL;
+    xTaskCreate(usbTask, "USB Task", 2048, NULL, 3, &hUSBTask);
 
     vTaskStartScheduler();
 

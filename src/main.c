@@ -58,7 +58,7 @@ static void sensor_task(void *arg){
             symbol = '-';
         } else if (az >=  0.95) {  
             programState = SPACE;
-            symbol = '_';
+            symbol = ' ';
         }else {
             programState = WAITING;
 

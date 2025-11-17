@@ -172,3 +172,10 @@ int main() {
 
     return 0;
 }
+
+/**
+* Ryhmän jäsenet: Anni Laitinen, Hanna Jussila, Ronja Talvensaari
+* Kurssi: JTKJ-PicoRTOS-Project
+* Tehtävä: Harjoitustyö - Morse-koodin lähetys ICM42670 anturin avulla 
+* Työpanos: Kaikki jäsenet ovat osallistuneet koodin suunnitteluun, toteutukseen ja testaukseen yhdessä. Pisteet jaetaan tasan.
+*/
